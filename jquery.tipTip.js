@@ -32,6 +32,7 @@
       fadeIn: 200,
       fadeOut: 200,
       attribute: "title",
+      extraClass: '',
       content: false, // HTML or String to fill TipTIp with
         enter: function(){},
         exit: function(){}
@@ -181,6 +182,9 @@
           }
           tiptip_arrow.css({"margin-left": arrow_left+"px", "margin-top": arrow_top+"px"});
           tiptip_holder.css({"margin-left": marg_left+"px", "margin-top": marg_top+"px"}).attr("class","tip"+t_class);
+          if (opts.extraClass != '') {
+            tiptip_holder.addClass(opts.extraClass)
+          }
 
           if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
           tiptip_timeout = setTimeout(function(){ tiptip_holder.stop(true,true).fadeIn(opts.fadeIn); }, opts.delay);
