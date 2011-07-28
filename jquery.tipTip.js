@@ -24,6 +24,7 @@
     var defaults = {
       activation: "hover",
       keepAlive: false,
+      keepAliveTimeout: 400,
       maxWidth: "200px",
       edgeOffset: 3,
       defaultPosition: "bottom",
@@ -60,41 +61,46 @@
         if(!opts.content){
           org_elem.removeAttr(opts.attribute); //remove original Attribute
         }
-        var timeout = false;
 
-        if(opts.activation == "hover"){
-          org_elem.hover(function(){
-            active_tiptip();
-          }, function(){
-            if(!opts.keepAlive){
-              deactive_tiptip();
-            }
-          });
-          if(opts.keepAlive){
-            tiptip_holder.hover(function(){}, function(){
-              deactive_tiptip();
-            });
+        window.tiptip_timeout = false;
+
+        var activate_event, deactivate_event;
+        switch(opts.activation) {
+          case "hover":
+            activate_event = 'mouseenter';
+            deactivate_event = 'mouseleave';
+            break;
+          case 'focus':
+            activate_event = 'focus';
+            deactivate_event = 'blur';
+            break;
+          case 'click':
+            activate_event = 'click';
+            deactivate_event = 'mouseleave';
+            break;
+        }
+        org_elem.bind(activate_event, function(e){
+          if(activate_event == "click"){
+            e.preventDefault();
           }
-        } else if(opts.activation == "focus"){
-          org_elem.focus(function(){
-            active_tiptip();
-          }).blur(function(){
+          if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
+          active_tiptip();
+
+        }).bind(deactivate_event, function(e){
+          if(!opts.keepAlive){
+            deactive_tiptip();
+          } else if(opts.keepAliveTimeout) {
+            if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
+            tiptip_timeout = setTimeout(deactive_tiptip, opts.keepAliveTimeout);
+          }
+        });
+
+        if(opts.keepAlive){
+          tiptip_holder.hover(function(){
+            if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
+          }, function(){
             deactive_tiptip();
           });
-        } else if(opts.activation == "click"){
-          org_elem.click(function(){
-            active_tiptip();
-            return false;
-          }).hover(function(){},function(){
-            if(!opts.keepAlive){
-              deactive_tiptip();
-            }
-          });
-          if(opts.keepAlive){
-            tiptip_holder.hover(function(){}, function(){
-              deactive_tiptip();
-            });
-          }
         }
 
         function active_tiptip(){
@@ -176,13 +182,13 @@
           tiptip_arrow.css({"margin-left": arrow_left+"px", "margin-top": arrow_top+"px"});
           tiptip_holder.css({"margin-left": marg_left+"px", "margin-top": marg_top+"px"}).attr("class","tip"+t_class);
 
-          if (timeout){ clearTimeout(timeout); }
-          timeout = setTimeout(function(){ tiptip_holder.stop(true,true).fadeIn(opts.fadeIn); }, opts.delay);
+          if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
+          tiptip_timeout = setTimeout(function(){ tiptip_holder.stop(true,true).fadeIn(opts.fadeIn); }, opts.delay);
         }
 
         function deactive_tiptip(){
           opts.exit.call(this);
-          if (timeout){ clearTimeout(timeout); }
+          if (tiptip_timeout){ clearTimeout(tiptip_timeout); }
           tiptip_holder.fadeOut(opts.fadeOut);
         }
       }
